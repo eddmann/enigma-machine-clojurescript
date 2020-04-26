@@ -1,0 +1,8 @@
+public/js
+node_modules
+target
+.m2
+.shadow-cljs
+.idea
+.nrepl-port
+.DS_Store
