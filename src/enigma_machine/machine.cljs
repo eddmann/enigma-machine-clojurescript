@@ -1,4 +1,4 @@
-(ns enigma-machine.core
+(ns enigma-machine.machine
   (:require [clojure.set :refer [map-invert]]))
 
 (def ^:private alphabet (seq "ABCDEFGHIJKLMNOPQRSTUVWXYZ"))
@@ -22,7 +22,7 @@
 (defn- step? [rotor]
   (= (:step rotor) (first (:in rotor))))
 
-(defn- flip-rotor [rotor]
+(defn- invert-rotor [rotor]
   {:in   (:out rotor),
    :out  (:in rotor),
    :step (:step rotor)})
@@ -37,8 +37,7 @@
   (let [step-one? (step? one)
         step-two? (step? two)]
     [(rotate-rotor one)
-     (if (or step-one? step-two?) (rotate-rotor two) two)
-     ; double step
+     (if (or step-one? step-two?) (rotate-rotor two) two) ; double step
      (if step-two? (rotate-rotor three) three)]))
 
 (defn- passthrough-rotors [rotors letter]
@@ -51,26 +50,39 @@
    rotors))
 
 (defn- encode-letter [{:keys [rotors reflector plugboard]} letter]
-  (let [plug           #(get plugboard % %),
-        reflect        #(get reflector %)
-        flipped-rotors (reverse (map flip-rotor rotors))]
+  (let [plug            #(get plugboard % %),
+        reflect         #(get reflector %)
+        inverted-rotors (reverse (map invert-rotor rotors))]
     (->> letter
          plug
          (passthrough-rotors rotors)
          reflect
-         (passthrough-rotors flipped-rotors)
+         (passthrough-rotors inverted-rotors)
          plug)))
 
-(defn setup-plugboard [plugboard]
+(defn- setup-plugboard [plugboard]
   (merge plugboard (map-invert plugboard)))
 
+(defn- setup-rotors [rotors positions]
+  (letfn
+   [(setup-rotor [rotor position]
+      (if (= (first (:in rotor)) position)
+        rotor
+        (recur (rotate-rotor rotor) position)))]
+    (map setup-rotor rotors (seq positions))))
+
+(defn- setup-machine [machine]
+  (-> machine
+      (update :plugboard setup-plugboard)
+      (update :rotors setup-rotors (:positions machine "AAA"))
+      (assoc :cipher [])))
+
 (defn encode-message [machine message]
-  (let [machine (update machine :plugboard setup-plugboard)]
-    (->> (seq message)
-         (reduce
-          (fn [machine letter]
-            (let [machine (update machine :rotors rotate-rotors)]
-              (update machine :cipher #(conj % (encode-letter machine letter)))))
-          (merge machine {:cipher []}))
-         :cipher
-         (apply str))))
+  (->> (seq message)
+       (reduce
+        (fn [machine letter]
+          (let [machine (update machine :rotors rotate-rotors)]
+            (update machine :cipher #(conj % (encode-letter machine letter)))))
+        (setup-machine machine))
+       :cipher
+       (apply str)))
