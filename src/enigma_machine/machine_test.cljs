@@ -45,8 +45,8 @@
   (gen/hash-map :rotors (-> (vals rotors) gen/elements (gen/vector 3))
                 :positions (gen/fmap clojure.string/join (gen/vector gen-char-upper-alpha 3))
                 :reflector (-> (vals reflectors) gen/elements)
-                :plugboard (->> (gen/vector-distinct gen-char-upper-alpha)
-                                (gen/such-that #(even? (count %)))
+                :plugboard (->> (gen/vector-distinct gen-char-upper-alpha {:min-elements 0 :max-elements 26})
+                                (gen/fmap #(if (odd? (count %)) (rest %) %))
                                 (gen/fmap #(apply hash-map %)))))
 
 (defspec cipher-is-same-length-as-message
