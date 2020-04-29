@@ -3,14 +3,18 @@
             [enigma-machine.machine :as machine]))
 
 (defn- select-rotor [idx value]
-  [:select
-   {:key idx :on-change #(reset! value (.. % -target -value)) :value @value}
-   (for [[key] machine/rotors]
-     [:option {:key key :value key} key])])
+  [:label
+   {:key idx}
+   (apply str "Rotor " (inc idx) ":")
+   [:select
+    {:on-change #(reset! value (.. % -target -value)) :value @value}
+    (for [[key] machine/rotors]
+      [:option {:key key :value key} key])]])
 
 (defn- select-reflector [value]
-  [:div
-   [:label "Reflector:"]
+  [:label
+   {:key "reflector"}
+   "Reflector:"
    [:select
     {:on-change #(reset! value (.. % -target -value)) :value @value}
     (for [[key] machine/reflectors]
@@ -20,14 +24,17 @@
   (-> el .-target .-value .toUpperCase (clojure.string/replace #"[^A-Z]" "")))
 
 (defn- message-textarea [value]
-  [:div
+  [:label
+   {:key "message"}
+   "Message:"
    [:textarea
     {:on-change #(reset! value (-> % parse-upper-alpha))
      :value     @value}]])
 
 (defn- positions-input [value]
-  [:div
-   [:label "Positions:"]
+  [:label
+   {:key "positions"}
+   "Positions:"
    [:input
     {:type       "text"
      :max-length 3
@@ -35,8 +42,9 @@
      :on-change  #(reset! value (-> % parse-upper-alpha))}]])
 
 (defn- plugboard-input [value]
-  [:div
-   [:label "Plugboard:"]
+  [:label
+   {:key "plugboard"}
+   "Plugboard:"
    [:input
     {:type      "text"
      :value     @value
@@ -48,23 +56,28 @@
         reflector (r/atom "B")
         plugboard (r/atom "")
         positions (r/atom "AAA")
-        message   (r/atom "")
-        cipher    (r/atom "")
+        message   (r/atom "HELLOWORLD")
+        cipher    (r/atom "ILBDAAMTAZ")
         encode    (fn []
                     (machine/encode-message
-                     {:rotors    (map #(get machine/rotors (keyword @%)) rotors)
+                     {:rotors    (map #((keyword @%) machine/rotors) rotors)
                       :positions @positions
-                      :reflector (get machine/reflectors (keyword @reflector))
+                      :reflector ((keyword @reflector) machine/reflectors)
                       :plugboard (apply hash-map (seq (clojure.string/replace @plugboard " " "")))}
                      @message))]
     (fn []
       [:div
        [:h1 "Enigma Machine"]
-       [:label "Rotors:"]
-       (doall (map-indexed select-rotor rotors))
-       (select-reflector reflector)
-       (plugboard-input plugboard)
-       (positions-input positions)
+       [:blockquote "An Enigma machine is a famous encryption machine used by the Germans during WWII to transmit coded messages."]
+       [:a {"href" "https://github.com/eddmann/enigma-machine-clojurescript"} "Source code"]
+       [:div
+        {:class "columns"}
+        (doall (map-indexed select-rotor rotors))]
+       [:div
+        {:class "columns"}
+        (select-reflector reflector)
+        (positions-input positions)
+        (plugboard-input plugboard)]
        (message-textarea message)
        [:button {:on-click #(reset! cipher (encode))} "Encode"]
        [:pre @cipher]])))
