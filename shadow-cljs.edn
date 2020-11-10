@@ -1,0 +1,13 @@
+{:source-paths ["src"]
+ :dependencies [[reagent "0.10.0" :exclusions [cljsjs/react cljsjs/react-dom]]
+                ^:dev [org.clojure/test.check "1.1.0"]]
+ :builds       {:test {:target    :node-test
+                       :output-to "target/node-tests.js"
+                       :ns-regexp "-test"
+                       :autorun   true}
+                :app  {:target     :browser
+                       :output-dir "public/js"
+                       :asset-path "js"
+                       :modules    {:main {:entries [enigma-machine.app]}}
+                       :devtools   {:http-root "public"
+                                    :http-port 8020}}}}

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enigma Machine</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/holiday.css" />
+    <style>
+        .columns { display: flex; flex: 1; }
+        @media (max-width: 600px) { .columns { display: block; } }
+        input, select, textarea, button { margin: 10px 10px 0 0; }
+    </style>
+</head>
+<body>
+    <h1>Enigma Machine</h1>
+    <blockquote>An Enigma machine is a famous encryption machine used by the Germans during WWII to transmit coded messages.</blockquote>
+    <a href="https://github.com/eddmann/enigma-machine-clojurescript">Source code</a>
+
+    <div id="app"></div>
+
+    <script src="js/main.js"></script>
+    <script>enigma_machine.app.init();</script>
+</body>
+</html>
